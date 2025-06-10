@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package kv_store.v1;
+
+option go_package = "kv-store/proto;proto";
+
+// KeyValueStore defines gRPC methods to interact with a simple key-value store.
+service KeyValueStore {
+  // Store or update a value at a given key.
+  rpc Put (PutRequest) returns (PutResponse);
+
+  // Retrieve the value stored at a given key.
+  rpc Get (GetRequest) returns (GetResponse);
+
+  // Delete the value stored at a given key.
+  rpc Delete (DeleteRequest) returns (DeleteResponse);
+}
+
+message PutRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message PutResponse {
+  string status = 1; 
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  string value = 1;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
