@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  grpc-store:
+    build:
+      context: .
+      dockerfile: store/Dockerfile
+    ports:
+      - "50051:50051"
+
+  rest-api:
+    build:
+      context: .
+      dockerfile: rest/Dockerfile
+    depends_on:
+      - grpc-store
+    ports:
+      - "8080:8080"
+    environment:
+      - GRPC_SERVER_ADDRESS=grpc-store:50051

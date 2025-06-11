@@ -11,23 +11,29 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/reshmavatkar/kv-store/rest/client"
+	"github.com/reshmavatkar/kv-store/rest/handler"
 )
 
-// ----------- Main Entry Point -----------
-
 func main() {
-	storeClient, err := NewStoreClient("localhost:50051")
+	grpcAddr := os.Getenv("GRPC_SERVER_ADDRESS")
+	if grpcAddr == "" {
+		grpcAddr = "localhost:50051" // fallback
+	}
+	storeClient, err := client.NewStoreClient(grpcAddr)
 	if err != nil {
 		log.Fatalf("Failed to connect to gRPC server: %v", err)
 	}
 	defer storeClient.Close()
 
-	handler := NewHandler(storeClient)
+	h := handler.NewHandler(storeClient)
 
 	router := gin.Default()
-	router.PUT("/store", handler.PutValue)
-	router.GET("/store/:key", handler.GetValue)
-	router.DELETE("/store/:key", handler.DeleteValue)
+	router.Use(gin.Logger(), gin.Recovery())
+	//TODO: add middleware to handle recovery, logging, and other validation
+	router.PUT("/store", h.PutValue)
+	router.GET("/store/:key", h.GetValue)
+	router.DELETE("/store/:key", h.DeleteValue)
 
 	srv := &http.Server{
 		Addr:         ":8080",
@@ -44,6 +50,7 @@ func main() {
 		}
 	}()
 
+	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop

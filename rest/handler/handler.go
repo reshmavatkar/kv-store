@@ -4,15 +4,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/reshmavatkar/kv-store/rest/client"
 )
 
 // ----------- Handler with Router Methods -----------
 
 type Handler struct {
-	store StoreClient
+	store client.StoreClient
 }
 
-func NewHandler(store StoreClient) *Handler {
+func NewHandler(store client.StoreClient) *Handler {
 	return &Handler{store: store}
 }
 
@@ -31,6 +32,7 @@ type DeleteRequestParam struct {
 	Key string `uri:"key" binding:"required"`
 }
 
+// PutValue validate and pass the request to store Put for storing Key Value in in-memory.
 func (h *Handler) PutValue(c *gin.Context) {
 	var req PutRequestBody
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,6 +46,7 @@ func (h *Handler) PutValue(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// GetValue validate and pass the request to store Get for getting Value for a key.
 func (h *Handler) GetValue(c *gin.Context) {
 	var req GetRequestParam
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -58,6 +61,7 @@ func (h *Handler) GetValue(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"key": req.Key, "value": val})
 }
 
+// DeleteValue validate and pass the request to store Delete for removing key value.
 func (h *Handler) DeleteValue(c *gin.Context) {
 	var req DeleteRequestParam
 	if err := c.ShouldBindUri(&req); err != nil {

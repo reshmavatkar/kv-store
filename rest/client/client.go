@@ -23,6 +23,8 @@ type grpcStoreClient struct {
 	client pb.KeyValueStoreClient
 }
 
+// NewStoreClient create new instance of the grpc client.
+// It is not using TLS credentials or any other authentication while connecting.
 func NewStoreClient(addr string) (StoreClient, error) {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// StoreServe is interface for store
 type StoreServe interface {
 	Put(ctx context.Context, in *pb.PutRequest) (*pb.PutResponse, error)
 	Get(ctx context.Context, in *pb.GetRequest) (*pb.GetResponse, error)
@@ -23,18 +24,19 @@ type StoreServe interface {
 }
 
 type storeServer struct {
-	//pb.NewKeyValueStoreClient
 	pb.UnimplementedKeyValueStoreServer
 	store map[string]string
 	mu    sync.RWMutex
 }
 
-func NewStoreServer() StoreServe {
+// NewStoreServer creates new instance for store server
+func NewStoreServer() pb.KeyValueStoreServer {
 	return &storeServer{
 		store: make(map[string]string),
 	}
 }
 
+// Put stores Key Value in in-memory
 func (s *storeServer) Put(ctx context.Context, req *pb.PutRequest) (*pb.PutResponse, error) {
 	if req.Key == "" {
 		return nil, status.Error(codes.InvalidArgument, "key is required")
@@ -49,6 +51,7 @@ func (s *storeServer) Put(ctx context.Context, req *pb.PutRequest) (*pb.PutRespo
 	return &pb.PutResponse{Status: "OK"}, nil
 }
 
+// Get retrives value for the key
 func (s *storeServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
 	if req.Key == "" {
 		return nil, status.Error(codes.InvalidArgument, "key is required")
@@ -63,6 +66,7 @@ func (s *storeServer) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetRespo
 	return &pb.GetResponse{Value: val}, nil
 }
 
+// Delete deletes Key value from in-memory
 func (s *storeServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
 	if req.Key == "" {
 		return nil, status.Error(codes.InvalidArgument, "key is required")
@@ -70,6 +74,10 @@ func (s *storeServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.De
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	_, exists := s.store[req.Key]
+	if !exists {
+		return nil, status.Error(codes.NotFound, "key not found")
+	}
 	delete(s.store, req.Key)
 	return &pb.DeleteResponse{Success: true}, nil
 }
@@ -83,7 +91,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	storeSvc := NewStoreServer()
-	pb.RegisterStoreServiceServer(grpcServer, storeSvc)
+	pb.RegisterKeyValueStoreServer(grpcServer, storeSvc)
 	// TODO: add UnaryInterceptor Logging, auth, metrics, panic recovery for unary RPCs
 
 	go func() {
