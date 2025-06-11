@@ -41,7 +41,7 @@ Both services run independently in Docker containers.
 ###  Clone the repository
 
 ```
-$vgit clone https://github.com/reshmavatkar/kv-store.git
+$ git clone https://github.com/reshmavatkar/kv-store.git
 $ cd kv-store
 ```
 ### Build and Run
